@@ -19,4 +19,6 @@
 	<fair.ScheduledEvents.AddEvent>Add {0} event</fair.ScheduledEvents.AddEvent>
 	<fair.ScheduledEvents.RemoveEvent>Remove event</fair.ScheduledEvents.RemoveEvent>
 
+	<fair.ScheduledEvents.DebugLogging>Debug logging</fair.ScheduledEvents.DebugLogging>
+
 </LanguageData>

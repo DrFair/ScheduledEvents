@@ -12,7 +12,7 @@ namespace ScheduledEvents
     public class ScheduledEventsSettings : ModSettings
     {
 
-        public static bool logDebug = true;
+        public static bool logDebug = false;
         public static List<ScheduledEvent> events = new List<ScheduledEvent>();
 
         public override void ExposeData()

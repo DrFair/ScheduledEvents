@@ -204,6 +204,9 @@ namespace ScheduledEvents
                 }
                 addButtonX += 205;
             }
+
+            Rect debugLogging = new Rect(addButtonX, y, 200, 30);
+            Widgets.CheckboxLabeled(debugLogging, "fair.ScheduledEvents.DebugLogging".Translate(), ref ScheduledEventsSettings.logDebug);
             y += 30;
 
             Widgets.EndScrollView();
