@@ -13,16 +13,16 @@ namespace ScheduledEvents
 
     public class IncidentTarget
     {
-        public static readonly IncidentTarget MAP = new IncidentTarget(0, "Map", "Map_PlayerHome", e => 
+        public static readonly IncidentTarget MAP = new IncidentTarget(0, "fair.ScheduledEvents.MapEvent", "Map_PlayerHome", e => 
         {
             return Find.Maps.Select(m => (IIncidentTarget)m);
             //return Enumerable.Repeat<IIncidentTarget>(Find.AnyPlayerHomeMap, 1);
         });
-        public static readonly IncidentTarget WORLD = new IncidentTarget(1, "World", "World", e =>
+        public static readonly IncidentTarget WORLD = new IncidentTarget(1, "fair.ScheduledEvents.WorldEvent", "World", e =>
         {
             return Enumerable.Repeat<IIncidentTarget>(Find.World, 1);
         });
-        public static readonly IncidentTarget CARAVAN = new IncidentTarget(2, "Caravan", "Caravan", e => 
+        public static readonly IncidentTarget CARAVAN = new IncidentTarget(2, "fair.ScheduledEvents.CaravanEvent", "Caravan", e => 
         {
             return Find.WorldObjects.Caravans.Select(c => (IIncidentTarget)c);
         });
@@ -60,7 +60,7 @@ namespace ScheduledEvents
 
         public IncidentTargetTagDef GetTargetTag()
         {
-            return DefDatabase<IncidentTargetTagDef>.AllDefs.FirstOrDefault(e => e.defName == targetDefName);
+            return DefDatabase<IncidentTargetTagDef>.AllDefs.FirstOrDefault(e => e.defName.Equals(targetDefName));
         }
 
         public IEnumerable<IncidentDef> GetAllIncidentDefs()
@@ -79,10 +79,10 @@ namespace ScheduledEvents
 
     public class IntervalScale
     {
-        public static readonly IntervalScale HOURS = new IntervalScale(0, "Hour(s)", GenDate.TicksPerHour);
-        public static readonly IntervalScale DAYS = new IntervalScale(1, "Day(s)", GenDate.TicksPerDay);
-        public static readonly IntervalScale SEASONS = new IntervalScale(2, "Season(s)", GenDate.TicksPerSeason);
-        public static readonly IntervalScale YEARS = new IntervalScale(3, "Year(s)", GenDate.TicksPerYear);
+        public static readonly IntervalScale HOURS = new IntervalScale(0, "fair.ScheduledEvents.Hours", GenDate.TicksPerHour);
+        public static readonly IntervalScale DAYS = new IntervalScale(1, "fair.ScheduledEvents.Days", GenDate.TicksPerDay);
+        public static readonly IntervalScale SEASONS = new IntervalScale(2, "fair.ScheduledEvents.Seasons", GenDate.TicksPerSeason);
+        public static readonly IntervalScale YEARS = new IntervalScale(3, "fair.ScheduledEvents.Years", GenDate.TicksPerYear);
 
         public static IEnumerable<IntervalScale> Values
         {
@@ -146,10 +146,10 @@ namespace ScheduledEvents
             {
                 ScheduledEvent e = ScheduledEventsSettings.events[i];
                 Rect headerLabel = new Rect(0, y, scrollView.width, labelHeight);
-                Widgets.Label(headerLabel, e.incidentName + " event for " + e.incidentTarget.label + ":");
+                Widgets.Label(headerLabel, "fair.ScheduledEvents.SettingLabel".Translate(e.incidentName, e.incidentTarget.label.Translate()));
                 y += labelHeight;
 
-                Utils.DrawScaleSetting(0, y, textWidth, entryWidth, entryHeight, scaleWidth, "Run event every:", e.intervalScale.label, ref e.interval, 1, (scale) =>
+                Utils.DrawScaleSetting(0, y, textWidth, entryWidth, entryHeight, scaleWidth, "fair.ScheduledEvents.SettingRunEvery".Translate(), e.intervalScale.label.Translate(), ref e.interval, 1, (scale) =>
                 {
                     e.intervalScale = scale;
                     base.WriteSettings();
@@ -157,7 +157,7 @@ namespace ScheduledEvents
                 });
                 y += entryHeight + 5;
 
-                Utils.DrawScaleSetting(0, y, textWidth, entryWidth, entryHeight, scaleWidth, "Offset first event by:", e.offsetScale.label, ref e.offset, 0, (scale) =>
+                Utils.DrawScaleSetting(0, y, textWidth, entryWidth, entryHeight, scaleWidth, "fair.ScheduledEvents.SettingOffsetBy".Translate(), e.offsetScale.label.Translate(), ref e.offset, 0, (scale) =>
                 {
                     e.offsetScale = scale;
                     base.WriteSettings();
@@ -167,7 +167,7 @@ namespace ScheduledEvents
 
                 Rect removeButton = new Rect(0, y, 200, 30);
 
-                if (Widgets.ButtonText(removeButton, "Remove event"))
+                if (Widgets.ButtonText(removeButton, "fair.ScheduledEvents.RemoveEvent".Translate()))
                 {
                     ScheduledEventsSettings.events.RemoveAt(i);
                     base.WriteSettings();
@@ -184,7 +184,7 @@ namespace ScheduledEvents
             foreach (IncidentTarget target in IncidentTarget.Values)
             {
                 Rect addButton = new Rect(addButtonX, y, 200, 30);
-                if (Widgets.ButtonText(addButton, "Add " + target.label + " event"))
+                if (Widgets.ButtonText(addButton, "fair.ScheduledEvents.AddEvent".Translate(target.label.Translate())))
                 {
                     List<FloatMenuOption> list = new List<FloatMenuOption>();
 
@@ -195,7 +195,7 @@ namespace ScheduledEvents
                         list.Add(new FloatMenuOption(incident.defName, delegate
                         {
                             ScheduledEventsSettings.events.Add(new ScheduledEvent(target, incident.defName));
-                            Utils.LogDebug("Added scheduled " + target.label + " event");
+                            Utils.LogDebug("Added scheduled " + target.label.Translate() + " event");
                             base.WriteSettings();
                             base.DoSettingsWindowContents(inRect); // Update window contents
                         }));
@@ -214,7 +214,7 @@ namespace ScheduledEvents
 
         public override string SettingsCategory()
         {
-            return "Scheduled events";
+            return "fair.ScheduledEvents.Title".Translate();
         }
     }
 

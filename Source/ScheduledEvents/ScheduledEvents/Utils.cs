@@ -105,7 +105,7 @@ namespace ScheduledEvents
                 List<FloatMenuOption> list = new List<FloatMenuOption>();
                 foreach (IntervalScale scale in IntervalScale.Values)
                 {
-                    list.Add(new FloatMenuOption(scale.label, delegate
+                    list.Add(new FloatMenuOption(scale.label.Translate(), delegate
                     {
                         setScale.Invoke(scale);
                     }));
