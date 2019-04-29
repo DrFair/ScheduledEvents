@@ -1,0 +1,8 @@
+
+# VS studio project files
+.vs/
+bin/
+obj/
+
+# Assemblies from build output
+Assemblies/

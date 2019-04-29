@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>Scheduled Events</name>
+  <author>Fair</author>
+  <supportedVersions>
+  	<li>1.0</li>
+  </supportedVersions>
+  <url>https://steamcommunity.com/id/FairProfile/</url>
+  <description>
+Adds ability to add regularly scheduled events.
+Set up the events in Options -> Mod Setttings -> Scheduled events
+  </description>
+</ModMetaData>
