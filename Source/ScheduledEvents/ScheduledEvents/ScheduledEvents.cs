@@ -13,16 +13,16 @@ namespace ScheduledEvents
 
     public class IncidentTarget
     {
-        public static readonly IncidentTarget MAP = new IncidentTarget(0, "fair.ScheduledEvents.MapEvent", "Map_PlayerHome", e => 
+        public static readonly IncidentTarget MAP = new IncidentTarget(0, "fair.ScheduledEvents.MapEvent", "Map_PlayerHome", true, e => 
         {
             return Find.Maps.Select(m => (IIncidentTarget)m);
             //return Enumerable.Repeat<IIncidentTarget>(Find.AnyPlayerHomeMap, 1);
         });
-        public static readonly IncidentTarget WORLD = new IncidentTarget(1, "fair.ScheduledEvents.WorldEvent", "World", e =>
+        public static readonly IncidentTarget WORLD = new IncidentTarget(1, "fair.ScheduledEvents.WorldEvent", "World", false, e =>
         {
             return Enumerable.Repeat<IIncidentTarget>(Find.World, 1);
         });
-        public static readonly IncidentTarget CARAVAN = new IncidentTarget(2, "fair.ScheduledEvents.CaravanEvent", "Caravan", e => 
+        public static readonly IncidentTarget CARAVAN = new IncidentTarget(2, "fair.ScheduledEvents.CaravanEvent", "Caravan", true, e => 
         {
             return Find.WorldObjects.Caravans.Select(c => (IIncidentTarget)c);
         });
@@ -49,13 +49,15 @@ namespace ScheduledEvents
         public readonly int id;
         public readonly string label;
         public readonly string targetDefName;
+        public readonly bool hasTargetSelector;
         public readonly Func<ScheduledEvent, IEnumerable<IIncidentTarget>> targetGetter;
-        IncidentTarget(int id, string label, string targetDefName, Func<ScheduledEvent, IEnumerable<IIncidentTarget>> targetGetter)
+        IncidentTarget(int id, string label, string targetDefName, bool hasTargetSelector, Func<ScheduledEvent, IEnumerable<IIncidentTarget>> targetGetter)
         {
             this.id = id;
             this.label = label;
             this.targetDefName = targetDefName;
             this.targetGetter = targetGetter;
+            this.hasTargetSelector = hasTargetSelector;
         }
 
         public IncidentTargetTagDef GetTargetTag()
@@ -73,6 +75,62 @@ namespace ScheduledEvents
         public IEnumerable<IIncidentTarget> GetCurrentTarget(ScheduledEvent e)
         {
             return targetGetter.Invoke(e);
+        }
+        
+    }
+
+    public class TargetSelector
+    {
+        public static readonly TargetSelector EVERY = new TargetSelector(0, "fair.ScheduledEvents.SelEvery", (targets, action) => 
+        {
+            foreach (IIncidentTarget target in targets) action.Invoke(target);
+        });
+        public static readonly TargetSelector RANDOM_ONE = new TargetSelector(1, "fair.ScheduledEvents.SelRandomOne", (targets, action) => 
+        {
+            if (targets.Count() == 0) return;
+            IIncidentTarget target = targets.RandomElementWithFallback();
+            if (target != null) action.Invoke(target);
+
+        });
+        public static readonly TargetSelector FIRST = new TargetSelector(2, "fair.ScheduledEvents.SelFirst", (targets, action) =>
+        {
+            IIncidentTarget target = targets.FirstOrFallback(null);
+            if (target != null) action.Invoke(target);
+        });
+
+        public static IEnumerable<TargetSelector> Values
+        {
+            get
+            {
+                yield return EVERY;
+                yield return RANDOM_ONE;
+                yield return FIRST;
+            }
+        }
+
+        // Custom save/load logic
+        public static void Look(ref TargetSelector value, string label)
+        {
+            int id = value.id;
+            Scribe_Values.Look(ref id, label, default(int), true);
+            TargetSelector found = Values.FirstOrDefault((sel) => sel.id == id);
+            if (found == null) found = EVERY; // Default value
+            value = found;
+        }
+
+        public readonly int id;
+        public readonly string label;
+        public readonly Action<IEnumerable<IIncidentTarget>, Action<IIncidentTarget>> action;
+        private TargetSelector(int id, string label, Action<IEnumerable<IIncidentTarget>, Action<IIncidentTarget>> action)
+        {
+            this.id = id;
+            this.label = label;
+            this.action = action;
+        }
+
+        public void RunOn(IEnumerable<IIncidentTarget> targets, Action<IIncidentTarget> action)
+        {
+            this.action.Invoke(targets, action);
         }
         
     }
@@ -145,8 +203,28 @@ namespace ScheduledEvents
             for (int i = 0; i < ScheduledEventsSettings.events.Count; i++)
             {
                 ScheduledEvent e = ScheduledEventsSettings.events[i];
-                Rect headerLabel = new Rect(0, y, scrollView.width, labelHeight);
+                Rect headerLabel = new Rect(0, y, textWidth, labelHeight);
                 Widgets.Label(headerLabel, "fair.ScheduledEvents.SettingLabel".Translate(e.incidentName, e.incidentTarget.label.Translate()));
+
+                if (e.incidentTarget.hasTargetSelector)
+                {
+                    Rect selectorButton = new Rect(textWidth, y, 200, labelHeight);
+                    if (Widgets.ButtonText(selectorButton, e.targetSelector.label.Translate(e.incidentTarget.label.Translate())))
+                    {
+                        List<FloatMenuOption> list = new List<FloatMenuOption>();
+                        foreach (TargetSelector sel in TargetSelector.Values)
+                        {
+                            list.Add(new FloatMenuOption(sel.label.Translate(e.incidentTarget.label.Translate()), delegate
+                            {
+                                e.targetSelector = sel;
+                                base.WriteSettings();
+                                base.DoSettingsWindowContents(scrollView); // Update button text
+                            }));
+                        }
+                        Find.WindowStack.Add(new FloatMenu(list));
+                    }
+                }
+
                 y += labelHeight;
 
                 Utils.DrawScaleSetting(0, y, textWidth, entryWidth, entryHeight, scaleWidth, "fair.ScheduledEvents.SettingRunEvery".Translate(), e.intervalScale.label.Translate(), ref e.interval, 1, (scale) =>
@@ -166,13 +244,15 @@ namespace ScheduledEvents
                 y += entryHeight + 5;
 
                 Rect removeButton = new Rect(0, y, 200, 30);
-
+                Color oldColor = GUI.color;
+                GUI.color = new Color(1f, 0.3f, 0.35f);
                 if (Widgets.ButtonText(removeButton, "fair.ScheduledEvents.RemoveEvent".Translate()))
                 {
                     ScheduledEventsSettings.events.RemoveAt(i);
                     base.WriteSettings();
                     base.DoSettingsWindowContents(scrollView); // Update window
                 }
+                GUI.color = oldColor;
                 y += 35;
 
                 Widgets.DrawLineHorizontal(0, y, scrollView.width);

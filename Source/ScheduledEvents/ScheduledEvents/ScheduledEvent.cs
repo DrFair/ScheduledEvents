@@ -12,6 +12,7 @@ namespace ScheduledEvents
     {
         public bool enabled = true; // If the event is enabled
         public readonly IncidentTarget incidentTarget = null;
+        public TargetSelector targetSelector = TargetSelector.EVERY;
 
         // The reason we have to use name, is because when loading this, incident defs are not yet loaded.
         public readonly string incidentName = null;
@@ -51,6 +52,7 @@ namespace ScheduledEvents
         public void Scribe()
         {
             Scribe_Values.Look(ref enabled, "enabled", default(bool), true);
+            TargetSelector.Look(ref targetSelector, "targetSelector");
             Scribe_Values.Look(ref interval, "interval", default(int), true);
             IntervalScale.Look(ref intervalScale, "intervalScale");
             Scribe_Values.Look(ref offset, "offset", default(int), true);

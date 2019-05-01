@@ -12,6 +12,10 @@
 	<fair.ScheduledEvents.WorldEvent>World</fair.ScheduledEvents.WorldEvent>
 	<fair.ScheduledEvents.CaravanEvent>Caravan</fair.ScheduledEvents.CaravanEvent>
 
+	<fair.ScheduledEvents.SelEvery>Every {0}</fair.ScheduledEvents.SelEvery>
+	<fair.ScheduledEvents.SelRandomOne>Random {0}</fair.ScheduledEvents.SelRandomOne>
+	<fair.ScheduledEvents.SelFirst>First {0}</fair.ScheduledEvents.SelFirst>
+
 	<fair.ScheduledEvents.SettingLabel>{0} event for {1}:</fair.ScheduledEvents.SettingLabel>
 	<fair.ScheduledEvents.SettingRunEvery>Run event every:</fair.ScheduledEvents.SettingRunEvery>
 	<fair.ScheduledEvents.SettingOffsetBy>Offset first event by:</fair.ScheduledEvents.SettingOffsetBy>

@@ -62,7 +62,7 @@ namespace ScheduledEvents
                     IEnumerable<IIncidentTarget> targets = nextEvent.e.incidentTarget.GetCurrentTarget(nextEvent.e);
                     if (targets.Count() > 0)
                     {
-                        foreach (IIncidentTarget target in targets)
+                        nextEvent.e.targetSelector.RunOn(targets, (target) =>
                         {
                             if (incident.TargetAllowed(target))
                             {
@@ -79,7 +79,7 @@ namespace ScheduledEvents
                             {
                                 Utils.LogDebugWarning($"Event target was invalid");
                             }
-                        }
+                        });
                     }
                     else
                     {
