@@ -13,11 +13,13 @@ namespace ScheduledEvents
 
         private readonly Game game;
         private readonly List<TickEvent> events;
+        private readonly List<NextEvent> nextEvents;
 
         public SEGameComponent(Game game) : base()
         {
             this.game = game;
             this.events = new List<TickEvent>();
+            this.nextEvents = new List<NextEvent>();
         }
 
         public override void FinalizeInit()
@@ -62,24 +64,7 @@ namespace ScheduledEvents
                     IEnumerable<IIncidentTarget> targets = nextEvent.e.incidentTarget.GetCurrentTarget(nextEvent.e);
                     if (targets.Count() > 0)
                     {
-                        nextEvent.e.targetSelector.RunOn(targets, (target) =>
-                        {
-                            if (incident.TargetAllowed(target))
-                            {
-                                // This is basically taken from Dialog_DebugActionMenu (debug menu source)
-                                IncidentParms parms = StorytellerUtility.DefaultParmsNow(incident.category, target);
-                                if (incident.pointsScaleable)
-                                {
-                                    StorytellerComp stComp = Find.Storyteller.storytellerComps.First((StorytellerComp x) => x is StorytellerComp_OnOffCycle || x is StorytellerComp_RandomMain);
-                                    parms = stComp.GenerateParms(incident.category, parms.target);
-                                }
-                                incident.Worker.TryExecute(parms);
-                            }
-                            else
-                            {
-                                Utils.LogDebugWarning($"Event target was invalid");
-                            }
-                        });
+                        nextEvent.e.targetSelector.RunOn(targets, (target) => this.nextEvents.Add(new NextEvent(incident, target)));
                     }
                     else
                     {
@@ -94,9 +79,45 @@ namespace ScheduledEvents
                 //Utils.LogDebug($"Hours until: {(nextEventTick - currentTick) / GenDate.TicksPerHour}");
                 TickEvent.AddToList(events, nextEventTick, nextEvent.e);
             }
+            if (nextEvents.Count > 0)
+            {
+                nextEvents.First().Execute();
+                nextEvents.RemoveAt(0);
+            }
             //Current.Game.storyteller.TryFire()
             base.GameComponentTick();
         }
 
+        private class NextEvent
+        {
+            public readonly IncidentDef incident;
+            public readonly IIncidentTarget target;
+
+            public NextEvent(IncidentDef incident, IIncidentTarget target)
+            {
+                this.incident = incident;
+                this.target = target;
+            }
+
+            public void Execute()
+            {
+                if (incident.TargetAllowed(target))
+                {
+                    // This is basically taken from Dialog_DebugActionMenu (debug menu source)
+                    IncidentParms parms = StorytellerUtility.DefaultParmsNow(incident.category, target);
+                    if (incident.pointsScaleable)
+                    {
+                        StorytellerComp stComp = Find.Storyteller.storytellerComps.First((StorytellerComp x) => x is StorytellerComp_OnOffCycle || x is StorytellerComp_RandomMain);
+                        parms = stComp.GenerateParms(incident.category, parms.target);
+                    }
+                    incident.Worker.TryExecute(parms);
+                }
+                else
+                {
+                    Utils.LogDebugWarning($"Event target was invalid");
+                }
+            }
+        }
     }
+
 }
